@@ -5,6 +5,7 @@
 #include <algorithm>
 
 
+
 void FluidSimulation::init(std::vector<glm::vec3>& positions){
 
     particles.reserve(positions.size());
@@ -16,15 +17,14 @@ void FluidSimulation::init(std::vector<glm::vec3>& positions){
 }
 
 
-void FluidSimulation::simulateStep(){
-    reset();
-    insertParticelsIntoGrid();
-    densityCalculations();
-    pressureFromDensity();
-    forcesFromPressure();
-    velFromForces();
+void FluidSimulation::simulateStep() {
+    { Timer t("1. Reset", profileLogs); reset(); }
+    { Timer t("2. Grid Insertion", profileLogs); insertParticelsIntoGrid(); }
+    { Timer t("3. Density", profileLogs); densityCalculations(); }
+    { Timer t("4. Pressure", profileLogs); pressureFromDensity(); }
+    { Timer t("5. Forces", profileLogs); forcesFromPressure(); }
+    { Timer t("6. Velocity", profileLogs); velFromForces(); }
 }
-
 
 
 void FluidSimulation::reset(){
