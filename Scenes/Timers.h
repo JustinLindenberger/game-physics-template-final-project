@@ -1,26 +1,31 @@
+
 #include <chrono>
 #include <string>
 #include <unordered_map>
 #include <iostream>
 
-struct ProfileData {
+struct ProfileData 
+{
     double totalDuration = 0;
     int count = 0;
 };
 
-
-class Timer {
+class Timer 
+{
 public:
     Timer(const std::string& name, std::unordered_map<std::string, ProfileData>& logs)
-        : name(name), logs(logs), start(std::chrono::high_resolution_clock::now()) {}
+        : name(name), logs(logs), start(std::chrono::high_resolution_clock::now()) { }
 
-    ~Timer() {
+    ~Timer() 
+    {
         auto end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double, std::milli> elapsed = end - start;
         logs[name].totalDuration += elapsed.count();
         logs[name].count++;
-        if (logs[name].count == 1000) {
-            if(name=="1. Reset"){
+        if (logs[name].count == 1000) 
+        {
+            if(name=="1. Reset") 
+            {
                 std::cout<<"\n------------------------------------\n";
             }
             

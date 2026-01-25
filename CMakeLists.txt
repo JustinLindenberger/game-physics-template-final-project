@@ -5,9 +5,6 @@ project(
 	VERSION 0.1.0
 	LANGUAGES CXX C
 	)
-
-# ADDED to make for loops parallizable
-find_package(TBB REQUIRED)
 	
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED On)
@@ -148,7 +145,7 @@ target_include_directories(Template PRIVATE ${CMAKE_BINARY_DIR})
 # message(STATUS  ${CMAKE_CURRENT_SOURCE_DIR})
 # message(STATUS  ${CMAKE_BINARY_DIR})
 
-target_link_libraries(Template PRIVATE glfw webgpu glfw3webgpu imgui TBB::tbb)
+target_link_libraries(Template PRIVATE glfw webgpu glfw3webgpu imgui)
 
 set_target_properties(Template PROPERTIES
 	CXX_STANDARD 17

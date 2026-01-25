@@ -1,4 +1,6 @@
+
 #pragma once
+
 #include "Renderer.h"
 
 /// @brief Scene base class. **Run `cmake . -B build` after adding new files to the scenes folder**
@@ -25,3 +27,4 @@ public:
     virtual void onGUI() {};
     virtual ~Scene() = default;
 };
+

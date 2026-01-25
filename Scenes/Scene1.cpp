@@ -1,42 +1,71 @@
+
 #include "Scene1.h"
 
+void Scene1::init()
+{
+    constexpr int32_t numParticles = SIZE * SIZE * SIZE;
+    constexpr float simulationScale = 0.4f;
 
-// DUMMY IMPLEMENTATIONS
+    constexpr glm::vec3 containerScale = glm::vec3(simulationScale * SIZE);
+    constexpr glm::vec3 containerCentre = glm::vec3(0.0f, containerScale.y / 6.0f, 0.0f);
+    constexpr float damping = 0.8f;
 
+    constexpr glm::ivec3 gridPartition = {
+        static_cast<int>(containerScale.x / Kernel::RADIUS),
+        static_cast<int>(containerScale.y / Kernel::RADIUS),
+        static_cast<int>(containerScale.z / Kernel::RADIUS),
+    };
 
+    constexpr glm::vec3 wallCentre = containerCentre + glm::vec3(0.0f, containerScale.y / 4.0f, containerScale.z / 12.0f);
+    constexpr glm::vec3 wallScale = glm::vec3(containerScale.x, containerScale.y / 6.0f, 5.0f * containerScale.z / 6.0f);
 
-void Scene1::init(){
-    std::vector<glm::vec3> positions;
+    m_container = Container(containerCentre, containerScale, damping);
+    m_wall = Wall(wallCentre, wallScale, damping);
+    m_grid = UniformGrid(containerCentre, containerScale, gridPartition);
+    m_solver = Solver<Kernel>(numParticles);
 
-    // for random positions
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_real_distribution<float> dist(-5.0f, 5.0f); 
+    int32_t i = 0;
+    m_pool.resize(numParticles);
 
-
-    for (int i = 0; i < 1000; ++i) {
-        positions.emplace_back(dist(gen), dist(gen), dist(gen));
+    for (int32_t z = -SIZE/2; z < (SIZE+1)/2; ++z)
+    {
+        for (int32_t y = -SIZE/2; y < (SIZE+1)/2; ++y)
+        {
+            for (int32_t x = -SIZE/2; x < (SIZE+1)/2; ++x)
+            {
+                m_pool.positions[i++] = SPACING * glm::vec3(x, y, z);
+            }
+        }
     }
-    fluidSim.init(positions);
 }
 
+void Scene1::simulateStep()
+{
+    if (m_paused) return;
 
-
-
-void Scene1::onDraw(Renderer& renderer){
-    glm::vec4 color{0.4f, 0.4f, 1.0f, 0.6f};
-    glm::quat orientation{0.0f, 0.0f, 0.0f, 1.0f};
-    glm::vec3 size{0.2f};
-
-    for (auto& cube : fluidSim.particles) {
-        renderer.drawCube(cube.pos, orientation, size, color);
+    m_lag += ImGui::GetIO().DeltaTime;
+    while (m_lag > m_stepTime) 
+    {
+        m_grid.updateCells(m_pool);
+        m_solver.step(m_pool, m_grid, m_stepTime);
+        m_container.bound(m_pool);
+        m_wall.bound(m_pool);
+        m_lag -= m_stepTime;
     }
 }
 
-void Scene1::onGUI(){
+void Scene1::onDraw(Renderer& renderer)
+{
+    m_container.draw(renderer);
+    m_wall.draw(renderer);
+    m_pool.draw(renderer); 
+    // m_pool.drawWithSpeed(renderer);
+}
 
-};
+void Scene1::onGUI()
+{
+    ImGui::SliderFloat("Step Time", &m_stepTime, 0.001f, 0.1f);
+    if (ImGui::Button(m_paused ? "PLAY" : "PAUSE"))
+        m_paused = !m_paused;
+}
 
-void Scene1::simulateStep(){
-    fluidSim.simulateStep();
-};
