@@ -5,10 +5,11 @@ project(
 	VERSION 0.1.0
 	LANGUAGES CXX C
 	)
-
-# ADDED to make for loops parallizable
-find_package(TBB REQUIRED)
 	
+if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+    set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
+endif()
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED On)
 set(CMAKE_CXX_EXTENSIONS Off)
@@ -90,6 +91,23 @@ add_executable(Template
 	src/PathFinder.cpp
 )
 
+find_package(TBB)
+if (TBB_FOUND)
+    target_link_libraries(Template PRIVATE TBB::tbb)
+    target_compile_definitions(Template PRIVATE TBB_FOUND=1)
+else()
+    target_compile_definitions(Template PRIVATE TBB_FOUND=0)
+endif()
+
+find_package(OpenMP)
+if (OpenMP_CXX_FOUND)
+    target_link_libraries(Template PRIVATE OpenMP::OpenMP_CXX)
+    target_compile_definitions(Template PRIVATE OPENMP_ENABLED=1)
+else()
+    target_compile_definitions(Template PRIVATE OPENMP_ENABLED=0)
+endif()
+
+
 if(UNIX AND NOT APPLE)
 	if (DEFINED ENV{XDG_SESSION_TYPE})
 		if ($ENV{XDG_SESSION_TYPE} STREQUAL "x11")
@@ -148,7 +166,7 @@ target_include_directories(Template PRIVATE ${CMAKE_BINARY_DIR})
 # message(STATUS  ${CMAKE_CURRENT_SOURCE_DIR})
 # message(STATUS  ${CMAKE_BINARY_DIR})
 
-target_link_libraries(Template PRIVATE glfw webgpu glfw3webgpu imgui TBB::tbb)
+target_link_libraries(Template PRIVATE glfw webgpu glfw3webgpu imgui)
 
 set_target_properties(Template PROPERTIES
 	CXX_STANDARD 17

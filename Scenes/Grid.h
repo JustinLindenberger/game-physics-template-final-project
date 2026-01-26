@@ -7,9 +7,9 @@
 
 class Grid{
     private:
-        const float xMin =  0.0f;
+        const float xMin =  -10.0f;
         const float xMax =  10.0f;
-        const float yMin =  0.0f;
+        const float yMin =  -10.0f;
         const float yMax =  10.0f;
         const float zMin =  0.0f;
         const float zMax = 20.0f;
@@ -51,36 +51,31 @@ class Grid{
         }
 
         // get the indices of the neighboring cells in each axis (27 in total)
-        inline std::vector<int> neighborCellIndices(int ix, int iy, int iz) const {
-            // TODO(optimization): remove memory allocation
-            std::vector<int> cells;
-            cells.reserve(27);
+        inline int neighborCellIndices(int* neighborCells, int ix, int iy, int iz) const {
+            int valid_until = 0;
+            for (int dx = -1; dx <= 1; ++dx)
+            for (int dy = -1; dy <= 1; ++dy)
+            for (int dz = -1; dz <= 1; ++dz) {
 
-            for (int dx = -1; dx <= 1; ++dx){
-                for (int dy = -1; dy <= 1; ++dy){
-                    for (int dz = -1; dz <= 1; ++dz) {
+                int nx = ix + dx;
+                int ny = iy + dy;
+                int nz = iz + dz;
 
-                        int nx = ix + dx;
-                        int ny = iy + dy;
-                        int nz = iz + dz;
+                // skip out-of-bounds cells
+                if (nx < 0 || nx >= gridSizeX ||
+                    ny < 0 || ny >= gridSizeY ||
+                    nz < 0 || nz >= gridSizeZ)
+                    continue;
 
-                        // skip out-of-bounds cells
-                        if (nx < 0 || nx >= gridSizeX ||
-                            ny < 0 || ny >= gridSizeY ||
-                            nz < 0 || nz >= gridSizeZ)
-                            continue;
+                int cellIndex =
+                    nx +
+                    ny * gridSizeX +
+                    nz * gridSizeX * gridSizeY;
 
-                        int cellIndex =
-                            nx +
-                            ny * gridSizeX +
-                            nz * gridSizeX * gridSizeY;
-
-                        cells.push_back(cellIndex);
-                    }
-                }
+                neighborCells[valid_until++] = cellIndex;
             }
 
-            return cells;
+            return valid_until;
         }
 
         // empties the grid

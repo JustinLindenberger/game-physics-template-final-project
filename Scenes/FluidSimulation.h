@@ -19,6 +19,8 @@ public:
 
     std::vector<Particle> particles;
 
+    float dt = 0.005;
+
 private:
     void reset();
     void insertParticelsIntoGrid();
@@ -33,5 +35,10 @@ private:
 
     // SPH constants (TODO: remove/rename/edit)
     const float mass = 1.0f;       // Particle mass
+    const float restDensity = 200.0f; // Fluid rest density (kg/m³)
+    const float kappa = 1000.0f; // Stiffness constant
+    const float restitution = 0.1f;
+    // derived values
+    const float invRestDensity{1.0f / restDensity};
 
 };
