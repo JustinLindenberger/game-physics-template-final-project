@@ -9,12 +9,17 @@
 #include "Particle.h"
 #include "Cuboid.h"
 #include "AABB_constraint.h"
+#include "glm/gtc/quaternion.hpp"
+
+
+
+
 
 class FluidSimulation{
 
 public:
     void init(std::vector<glm::vec3>& positions);
-    void simulateStep();
+    void simulateStep(glm::quat rotation);
 
     std::vector<Particle> particles;
     std::vector<Cuboid> cubes;
@@ -27,9 +32,9 @@ private:
     void insertParticelsIntoGrid();
     void densityCalculations();
     void pressureFromDensity();
-    void forcesFromPressure();
-    void velFromForces();
-    void rigidBodyCollisionAndBoundaries();
+    void forcesFromPressure(glm::quat rotation);
+    void velFromForces(glm::quat rotation);
+    void rigidBodyCollisionAndBoundaries(glm::quat rotation);
 
     Grid grid;
 

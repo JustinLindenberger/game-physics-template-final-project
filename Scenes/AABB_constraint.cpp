@@ -13,7 +13,7 @@ AABBConstraint::AABBConstraint(
     glm::vec3 cmYMinus{center.x, center.y - scale.y * 2.5f, center.z};
     glm::vec3 cmYPlus{center.x, center.y + scale.y * 2.5f, center.z};
     glm::vec3 cmZMinus{center.x, center.y, center.z - scale.z * 2.5f};
-    // glm::vec3 cmZPlus{center.x, center.y, center.z + scale.z * 2.5f};
+    glm::vec3 cmZPlus{center.x, center.y, center.z + scale.z * 2.5f};
     glm::quat orientation(1.0f, 0.0f, 0.0f, 0.0f); 
     glm::vec3 linVel{0};
     glm::vec3 angVel{0};
@@ -25,7 +25,7 @@ AABBConstraint::AABBConstraint(
     _walls.push_back(Cuboid(nullptr, mass, cmYMinus, orientation, linVel, angVel, scaleBox, true));
     _walls.push_back(Cuboid(nullptr, mass, cmYPlus, orientation, linVel, angVel, scaleBox, true));
     _walls.push_back(Cuboid(nullptr, mass, cmZMinus, orientation, linVel, angVel, scaleBox, true));
-    // _walls.push_back(Cuboid(nullptr, mass, cmZPlus, orientation, linVel, angVel, scaleBox));
+    _walls.push_back(Cuboid(nullptr, mass, cmZPlus, orientation, linVel, angVel, scaleBox));
 }
 
 void AABBConstraint::ApplyTo(Cuboid& cuboid) noexcept

@@ -17,4 +17,4 @@ constexpr float h9{h6*h2*h};
 constexpr float pi = 3.1415f;
 
 //gravity
-constexpr glm::vec3 gravity{0.0f, 0.0f, -9.81};
+extern glm::vec3 gravity;

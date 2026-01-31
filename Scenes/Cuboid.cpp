@@ -136,7 +136,7 @@ void Cuboid::Collide(Cuboid& other) noexcept {
 }
 
 // Apply forces to the Cuboid based on the forces exerted on the boundary positions.
-void Cuboid::integrateFromBoundaryForces(float dt) noexcept {
+void Cuboid::integrateFromBoundaryForces(glm::quat rotation, float dt) noexcept {
     glm::vec3 force(0.0f);
     glm::vec3 torque(0.0f);
     for (int i = _start; i < _end; ++i) {
@@ -145,6 +145,7 @@ void Cuboid::integrateFromBoundaryForces(float dt) noexcept {
         torque += glm::cross((*_particles)[i].pos - _positionOfCentreOfMass, f);
     }
 
+    // _linearVelocity += glm::rotate(glm::normalize(glm::conjugate(rotation)), (force * _inverseMass) + gravity) * dt;
     _linearVelocity += ((force * _inverseMass) + gravity) * dt;
     _positionOfCentreOfMass += _linearVelocity * dt;
 

@@ -44,6 +44,6 @@ public:
     glm::vec3 GetWorldSpaceVelocityAt(const glm::vec3& leverArm) const noexcept; // get velocity of point respective of the cube's center of massnoexcept
     glm::mat4 GetModelMatrix() const noexcept; // Model matrix necessary for the collision detection function.
     void Collide(Cuboid& other) noexcept;
-    void integrateFromBoundaryForces(float dt) noexcept;
+    void integrateFromBoundaryForces(glm::quat rotation, float dt) noexcept;
 };
 
