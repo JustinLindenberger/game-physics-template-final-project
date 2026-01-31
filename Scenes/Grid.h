@@ -6,7 +6,7 @@
 
 
 class Grid{
-    private:
+    public:
         const float xMin =  -10.0f;
         const float xMax =  10.0f;
         const float yMin =  -10.0f;
@@ -22,7 +22,6 @@ class Grid{
         const float cellSizeY = (yMax-yMin) / gridSizeY;
         const float cellSizeZ = (zMax-zMin) / gridSizeZ;
 
-    public:
         std::vector<std::vector<int>> grid;
 
         // construct the grid

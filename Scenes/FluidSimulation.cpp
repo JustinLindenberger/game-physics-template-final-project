@@ -14,6 +14,7 @@ void FluidSimulation::init(std::vector<glm::vec3>& positions){
         // Create particles with pos filled in and other attributes are set to 0
         particles.emplace_back(pos);
     }
+    constraint = AABBConstraint(glm::vec3(0.0f, 0.0f, 10.f), glm::vec3{20.f});
 }
 
 
@@ -24,6 +25,7 @@ void FluidSimulation::simulateStep() {
     { Timer t("4. Pressure", profileLogs); pressureFromDensity(); }
     { Timer t("5. Forces", profileLogs); forcesFromPressure(); }
     { Timer t("6. Velocity", profileLogs); velFromForces(); }
+    { Timer t("7. Rigid Bodies", profileLogs); rigidBodyCollisionAndBoundaries();}
 }
 
 
@@ -51,6 +53,8 @@ void FluidSimulation::densityCalculations(){
     for(size_t i = 0; i<particles.size(); i++)
     {
         auto& p = particles[i];
+        if (p.isRigid) {continue;}
+
         p.density = 0.0f;
         glm::vec3 i_pos = p.pos;
         
@@ -83,7 +87,14 @@ void FluidSimulation::pressureFromDensity(){
     for(size_t i = 0; i<particles.size(); i++)
     {
         auto& p = particles[i];
-        p.pressure = kappa * ((p.density *  invRestDensity) * (p.density * invRestDensity) - 1);
+        if (p.isRigid) {
+            p.density = restDensity;
+            p.pressure = 0.0f;
+        } else {
+            // float base = (p.density *  invRestDensity);
+            // p.pressure = std::max(0.0f, (float) (kappa * (pow(base, 7) * (p.density * invRestDensity) - 1)));
+            p.pressure = kappa * ((p.density *  invRestDensity) * (p.density * invRestDensity) - 1);
+        }
     }
 }
 
@@ -98,14 +109,44 @@ void FluidSimulation::forcesFromPressure(){
     for(size_t i = 0; i<particles.size(); i++)
     {
         auto& p_i = particles[i];
+        if (p_i.isRigid) { continue; }
         glm::vec3 i_pos = p_i.pos;
         
         int ix, iy, iz;
         grid.posToIndex(ix, iy, iz, i_pos.x, i_pos.y, i_pos.z);
-
-        
         int valid_index = grid.neighborCellIndices(neighborIndices, ix, iy, iz);
+
         auto force_i = glm::vec3{0.0};
+
+        // Enforces boundary condition, if particles are close to the wall, generate a force repels them
+        glm::vec3 wallNormal = glm::vec3(0.0f);
+        float wallDist = 0.0f;
+        if (ix == 0) {
+            wallNormal = glm::vec3(1.0f, 0.0f, 0.0f);
+            wallDist = abs(grid.xMin - p_i.pos.x);
+            force_i += wallRepulsion * (h - wallDist) * (h - wallDist) * wallNormal;
+        }
+        if (ix == grid.gridSizeX-1) {
+            wallNormal = glm::vec3(-1.0f, 0.0f, 0.0f);
+            wallDist = abs(grid.xMax - p_i.pos.x);
+            force_i += wallRepulsion * (h - wallDist) * (h - wallDist) * wallNormal;
+        }
+        if (iy == 0) {
+            wallNormal = glm::vec3(0.0f, 1.0f, 0.0f);
+            wallDist = abs(grid.yMin - p_i.pos.y);
+            force_i += wallRepulsion * (h - wallDist) * (h - wallDist) * wallNormal;
+        }
+        if (iy == grid.gridSizeY-1) {
+            wallNormal = glm::vec3(0.0f, -1.0f, 0.0f);
+            wallDist = abs(grid.yMax - p_i.pos.y);
+            force_i += wallRepulsion * (h - wallDist) * (h - wallDist) * wallNormal;
+        }
+        if (iz == 0) {
+            wallNormal = glm::vec3(0.0f, 0.0f, 1.0f);
+            wallDist = abs(grid.zMin - p_i.pos.z);
+            force_i += wallRepulsion * (h - wallDist) * (h - wallDist) * wallNormal;
+        }
+
         for (int cell_idx=0; cell_idx<valid_index; cell_idx++) {
             for (int j : grid.grid[neighborIndices[cell_idx]]) {
                 Particle& p_j = particles[j];
@@ -123,7 +164,10 @@ void FluidSimulation::forcesFromPressure(){
                     float pressureTerm = (p_i.pressure / (p_i.density * p_i.density)) + 
                                          (p_j.pressure / (p_j.density * p_j.density));
                     
-                    force_i -= mass * pressureTerm * gradW;
+                    glm::vec3 forceTerm = -mass * pressureTerm * gradW;
+
+                    force_i += forceTerm;
+                    if (particles[j].isRigid) { particles[j].force -= forceTerm; } 
                 }
             }
         }
@@ -138,34 +182,48 @@ void FluidSimulation::velFromForces(){
     for(size_t i = 0; i<particles.size(); i++)
     {
         auto& p = particles[i];
-        p.vel = p.vel * 0.999f + p.force * dt;
+        if (p.isRigid) {continue;}
+
+        // p.vel = p.vel * 0.999f + p.force * dt;
+        p.vel = p.vel + p.force * dt;
         p.pos += p.vel * dt;
 
         // Ground
         if (p.pos.z < 0.01f) {
             p.pos.z = 0.01f;
-            p.vel.z *= -restitution;
+            // p.vel.z *= -restitution;
         }
 
          if (p.pos.x < -9.99f) {
-            p.pos.x = 9.99f;
-            p.vel.x *= -restitution;
+            p.pos.x = -9.99f;
+            // p.vel.x *= -restitution;
         }
 
         if (p.pos.x > 9.99f) {
             p.pos.x = 9.99f;
-            p.vel.x *= -restitution;
+            // p.vel.x *= -restitution;
         }
 
          if (p.pos.y < -9.99f) {
-            p.pos.y = 9.99f;
-            p.vel.y *= -restitution;
+            p.pos.y = -9.99f;
+            // p.vel.y *= -restitution;
         }
 
         if (p.pos.y > 9.99f) {
             p.pos.y = 9.99f;
-            p.vel.y *= -restitution;
+            // p.vel.y *= -restitution;
         }
 
+    }
+}
+
+void FluidSimulation::rigidBodyCollisionAndBoundaries() {
+    for (size_t i = 0; i < cubes.size(); ++i) {
+        constraint.ApplyTo(cubes[i]);
+        for (size_t j = i+1; j < cubes.size(); ++j) {
+            cubes[i].Collide(cubes[j]);
+        }
+        cubes[i].integrateFromBoundaryForces(dt);
+        cubes[i].updateBoundaryParticles();
     }
 }

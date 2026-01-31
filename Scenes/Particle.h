@@ -10,9 +10,11 @@ struct Particle{
     float density;
     float pressure;
 
+    bool isRigid;
+
     // Default constructor
-    Particle() : pos(0.0f), vel(0.0f), force(0.0f), density(0.0f), pressure(0.0f) {}
+    Particle() : pos(0.0f), vel(0.0f), force(0.0f), density(0.0f), pressure(0.0f), isRigid(false) {}
 
     // Pos-init constuctor
-    Particle(glm::vec3 p) : pos(p), vel(0.0f), force(0.0f), density(0.0f), pressure(0.0f) {}
+    Particle(glm::vec3 p, bool rigid = false) : pos(p), vel(0.0f), force(0.0f), density(0.0f), pressure(0.0f), isRigid(rigid) {}
 };
