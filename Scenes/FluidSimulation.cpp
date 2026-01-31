@@ -1,5 +1,10 @@
 #include "FluidSimulation.h"
 #include "Kernels.h"
+#include "Scenes/Constants.h"
+#include "glm/ext/quaternion_common.hpp"
+#include "glm/fwd.hpp"
+#include "glm/geometric.hpp"
+#include "glm/gtx/quaternion.hpp"
 #include <atomic>
 #include <iostream>
 #include <execution>
@@ -17,13 +22,13 @@ void FluidSimulation::init(std::vector<glm::vec3>& positions){
 }
 
 
-void FluidSimulation::simulateStep() {
+void FluidSimulation::simulateStep(glm::quat rotation) {
     { Timer t("1. Reset", profileLogs); reset(); }
     { Timer t("2. Grid Insertion", profileLogs); insertParticelsIntoGrid(); }
     { Timer t("3. Density", profileLogs); densityCalculations(); }
     { Timer t("4. Pressure", profileLogs); pressureFromDensity(); }
     { Timer t("5. Forces", profileLogs); forcesFromPressure(); }
-    { Timer t("6. Velocity", profileLogs); velFromForces(); }
+    { Timer t("6. Velocity", profileLogs); velFromForces(rotation); }
 }
 
 
@@ -127,18 +132,18 @@ void FluidSimulation::forcesFromPressure(){
                 }
             }
         }
-        p_i.force = force_i  + gravity;
+        p_i.force = force_i + gravity;
     };//);
 }
 
-void FluidSimulation::velFromForces(){
+void FluidSimulation::velFromForces(glm::quat rotation){
     // Use the forces that we calculated to calculate the new position and velocity of each particle
 
     #pragma omp parallel for simd schedule(static, 512)
     for(size_t i = 0; i<particles.size(); i++)
     {
         auto& p = particles[i];
-        p.vel = p.vel * 0.999f + p.force * dt;
+        p.vel = p.vel * 0.999f + glm::rotate(glm::normalize(glm::conjugate(rotation)),p.force) * dt;
         p.pos += p.vel * dt;
 
         // Ground
@@ -147,8 +152,14 @@ void FluidSimulation::velFromForces(){
             p.vel.z *= -restitution;
         }
 
-         if (p.pos.x < -9.99f) {
-            p.pos.x = 9.99f;
+        // Roof for Rotation
+        if (p.pos.z > 9.99f) {
+            p.pos.z = 9.99f;
+            p.pos.z *= -restitution;
+        }
+
+        if (p.pos.x < -9.99f) {
+            p.pos.x = -9.99f;
             p.vel.x *= -restitution;
         }
 
@@ -158,7 +169,7 @@ void FluidSimulation::velFromForces(){
         }
 
          if (p.pos.y < -9.99f) {
-            p.pos.y = 9.99f;
+            p.pos.y = -9.99f;
             p.vel.y *= -restitution;
         }
 

@@ -7,6 +7,8 @@
 #include "Timers.h"
 #include "Constants.h"
 #include "Particle.h"
+#include "glm/gtc/quaternion.hpp"
+
 
 
 
@@ -15,7 +17,7 @@ class FluidSimulation{
 
 public:
     void init(std::vector<glm::vec3>& positions);
-    void simulateStep();
+    void simulateStep(glm::quat rotation);
 
     std::vector<Particle> particles;
 
@@ -27,7 +29,7 @@ private:
     void densityCalculations();
     void pressureFromDensity();
     void forcesFromPressure();
-    void velFromForces();
+    void velFromForces(glm::quat rotation);
 
     Grid grid;
 

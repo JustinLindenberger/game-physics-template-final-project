@@ -1,6 +1,7 @@
 #pragma once
 #include "Scene.h"
 #include "FluidSimulation.h"
+#include "glm/fwd.hpp"
 
 #include <random>
 
@@ -14,4 +15,8 @@ class Scene1 : public Scene
     
     private:
         FluidSimulation fluidSim;
+        bool running;
+        int sceme;
+        glm::quat rotation;
+        glm::vec4 getColor(glm::vec3 vel);
 };
