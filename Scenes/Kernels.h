@@ -42,7 +42,7 @@ namespace Kernel{
         }
         
         inline glm::vec3 grad_wendland_3d(const glm::vec3& r_vec, float r2) {
-            float r = std::sqrt(r);
+            float r = std::sqrt(r2);
             float q = r / h;
             if (q >= 1.0f || r <= 1e-9f) 
                 return glm::vec3(0.0f);
@@ -54,6 +54,13 @@ namespace Kernel{
             float factor = -alpha * (20.0f / (h * h)) * (one_minus_q * one_minus_q * one_minus_q);
             
             return r_vec * factor;
+        }
+    }
+
+    namespace Viscosity{
+        float laplacianW_viscosity(float r2) {
+            float r = sqrt(r2);
+            return 45.0f / (pi* h6) * (h - r); // TODO: remove sqrt
         }
     }
 

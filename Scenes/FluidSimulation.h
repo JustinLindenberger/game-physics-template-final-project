@@ -26,6 +26,7 @@ public:
     AABBConstraint constraint;
 
     float dt = 0.005;
+    float viscosity = 1.0f;
 
 private:
     void reset();
@@ -48,5 +49,6 @@ private:
     const float wallRepulsion = 500.0f;
     // derived values
     const float invRestDensity{1.0f / restDensity};
+   
 
 };

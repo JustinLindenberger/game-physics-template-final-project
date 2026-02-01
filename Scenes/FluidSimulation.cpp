@@ -175,9 +175,24 @@ void FluidSimulation::forcesFromPressure(glm::quat rotation){
                                          (p_j.pressure / (p_j.density * p_j.density));
                     
                     glm::vec3 forceTerm = -mass * pressureTerm * gradW;
-
+                    if (particles[j].isRigid) {
+                        // Race:
+                        //particles[j].force -= forceTerm; 
+                        
+                        // safe, but slower
+                        #pragma omp atomic
+                        particles[j].force.x -= forceTerm.x;
+                        #pragma omp atomic
+                        particles[j].force.y -= forceTerm.y;
+                        #pragma omp atomic
+                        particles[j].force.z -= forceTerm.z;
+                        } 
+                    
+                    // Viscosity
+                    if (viscosity > 0.0f){ // if not needed, but makes runtime better
+                        forceTerm += viscosity * mass * (p_j.vel - p_i.vel) / ((p_i.density + p_j.density)/2) * Kernel::Viscosity::laplacianW_viscosity(r2);
+                    }
                     force_i += forceTerm;
-                    if (particles[j].isRigid) { particles[j].force -= forceTerm; } 
                 }
             }
         }

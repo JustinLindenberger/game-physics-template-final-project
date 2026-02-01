@@ -92,6 +92,8 @@ void Scene1::onGUI(){
         rotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
     }
     ImGui::SliderInt("Color Sceme", &sceme, 1, 3);
+
+    ImGui::SliderFloat("Viscosity", &fluidSim.viscosity, 0.0f, 2.5f);
     //Keyboard controls for rotation
     if(ImGui::IsKeyPressed(ImGuiKey_LeftArrow)){
         //Rotation to the left   
