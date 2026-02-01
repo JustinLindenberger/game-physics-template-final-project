@@ -44,23 +44,20 @@ void Scene1::init(){
     fluidSim.init(positions);
 }
 
-glm::vec4 Scene1::getColor(glm::vec3 vel){
+glm::vec4 Scene1::getColor(Particle particle){
     glm::vec4 res = glm::vec4(0.4f, 0.4f, 1.0f, 1.0f);
-    switch (sceme) {
-        case 1:
-            return res;
-            break;
-        case 2:
-            glm::vec4 slowest, fastest;
-            slowest = res;
-            fastest = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-            float maxVel = 20.0f;
-            float relVel = vel.length() / maxVel;
-            relVel <= 1 ? res = (slowest * relVel + (1- relVel) * fastest) : res = fastest;
-            return res;
-            break;
-    }
-    return res;
+    constexpr float blue = 0.0f * 0.0f;
+    constexpr float green = 2.0f * 2.0f;
+    constexpr float red = 4.0f * 4.0f;
+
+    const float v2 = glm::dot(particle.vel, particle.vel);
+    const float t = glm::clamp((v2 - blue)/(red - blue), 0.0f, 1.0f);
+
+    const float r = glm::clamp((t - 0.5f) * 2.0f, 0.0f, 1.0f);
+    const float b = glm::clamp((0.5f - t) * 2.0f, 0.0f, 1.0f);
+    const float g = 1.0f - red - blue;
+
+    return glm::vec4(red, green, blue, 0.6f);
 }
 
 
@@ -74,7 +71,7 @@ void Scene1::onDraw(Renderer& renderer){
         if(cube.isRigid) { 
             renderer.drawCube(rotatet_pos, orientation, size, glm::vec4{1.0f, 0.0f, 0.0f, 1.0f}); }
         else {
-            renderer.drawCube(rotatet_pos, orientation, size, getColor(cube.vel));
+            renderer.drawCube(rotatet_pos, orientation, size, getColor(cube));
         }
     }
     // for (auto& rigidBody : fluidSim.cubes) {

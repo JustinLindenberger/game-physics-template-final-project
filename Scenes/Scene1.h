@@ -18,5 +18,5 @@ class Scene1 : public Scene
         bool running;
         int sceme;
         glm::quat rotation;
-        glm::vec4 getColor(glm::vec3 vel);
+        glm::vec4 getColor(Particle p);
 };
